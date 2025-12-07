@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-brand-black text-gray-100;
+    }
+}
+
+@layer utilities {
+    .glass-panel {
+        @apply bg-glass-black backdrop-blur-md border border-glass-white/10 shadow-glass;
+    }
+
+    .glass-panel-hover {
+        @apply hover:bg-glass-white/10 hover:border-neon-cyan/30 transition-all duration-300;
+    }
+
+    .text-glow {
+        text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+    }
+
+    .text-glow-amber {
+        text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+    }
+}
