@@ -1,16 +1,42 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, Search, Zap, AlertTriangle } from 'lucide-react';
+import { Car, Search, Zap, AlertTriangle, ScanLine, Wrench } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { decodeVin } from '../services/geminiService';
 
 const HolographicDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [vehicle, setVehicle] = useState({ year: '', make: '', model: '' });
+    const [task, setTask] = useState('');
+    const [vin, setVin] = useState('');
+    const [isDecoding, setIsDecoding] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (vehicle.year && vehicle.make && vehicle.model) {
-            navigate(`/repair/${vehicle.year}/${vehicle.make}/${vehicle.model}/general`);
+        if (vehicle.year && vehicle.make && vehicle.model && task) {
+            navigate(`/repair/${vehicle.year}/${vehicle.make}/${vehicle.model}/${task.replace(/\s+/g, '-')}`);
+        }
+    };
+
+    const handleDecodeVin = async () => {
+        if (vin.length !== 17) {
+            setError("VIN MUST BE 17 CHARACTERS");
+            return;
+        }
+        setIsDecoding(true);
+        setError(null);
+        try {
+            const decoded = await decodeVin(vin);
+            setVehicle({
+                year: decoded.year,
+                make: decoded.make,
+                model: decoded.model
+            });
+        } catch (err) {
+            setError("DECODING FAILURE. VERIFY VIN.");
+        } finally {
+            setIsDecoding(false);
         }
     };
 
@@ -40,26 +66,97 @@ const HolographicDashboard: React.FC = () => {
                 <h2 className="text-3xl font-mono text-white mb-2 text-glow">SYSTEM READY</h2>
                 <p className="text-neon-cyan/70 mb-8 font-mono tracking-widest text-sm">INITIALIZE VEHICLE PARAMETERS</p>
 
-                <form onSubmit={handleSearch} className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {['Year', 'Make', 'Model'].map((field) => (
-                        <div key={field} className="relative group">
+                {/* VIN Decoder Section */}
+                <div className="w-full mb-8 max-w-2xl">
+                    <div className="flex flex-col md:flex-row gap-4 relative">
+                        <div className="flex-grow relative group">
                             <input
                                 type="text"
-                                placeholder={`ENTER ${field.toUpperCase()}`}
-                                className="w-full bg-black/50 border border-neon-cyan/30 rounded-lg px-4 py-3 text-neon-cyan placeholder-neon-cyan/30 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all font-mono text-sm uppercase"
-                                value={vehicle[field.toLowerCase() as keyof typeof vehicle]}
-                                onChange={(e) => setVehicle({ ...vehicle, [field.toLowerCase()]: e.target.value })}
+                                placeholder="ENTER 17-DIGIT VIN FOR AUTO-SCAN"
+                                className="w-full bg-black/50 border border-neon-cyan/30 rounded-lg px-4 py-3 text-neon-cyan placeholder-neon-cyan/30 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all font-mono text-sm uppercase tracking-wider"
+                                value={vin}
+                                onChange={(e) => {
+                                    setVin(e.target.value.toUpperCase());
+                                    setError(null);
+                                }}
+                                maxLength={17}
                             />
-                            <div className="absolute inset-0 border border-neon-cyan/0 group-hover:border-neon-cyan/20 rounded-lg pointer-events-none transition-all" />
+                            <div className="absolute right-3 top-3 text-neon-cyan/30 font-mono text-xs">
+                                {vin.length}/17
+                            </div>
                         </div>
-                    ))}
-                    <button
-                        type="submit"
-                        className="bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan text-neon-cyan px-6 py-3 rounded-lg font-bold font-mono tracking-wider flex items-center justify-center gap-2 hover:shadow-glow-cyan transition-all uppercase"
-                    >
-                        <Search className="w-4 h-4" />
-                        <span>Engage</span>
-                    </button>
+                        <button
+                            type="button"
+                            onClick={handleDecodeVin}
+                            disabled={isDecoding || vin.length !== 17}
+                            className="bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan text-neon-cyan px-6 py-3 rounded-lg font-bold font-mono tracking-wider flex items-center justify-center gap-2 hover:shadow-glow-cyan transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                            {isDecoding ? (
+                                <Zap className="w-4 h-4 animate-pulse" />
+                            ) : (
+                                <ScanLine className="w-4 h-4" />
+                            )}
+                            <span>{isDecoding ? 'SCANNING...' : 'DECODE VIN'}</span>
+                        </button>
+                    </div>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-neon-red text-xs font-mono mt-2 flex items-center gap-2"
+                        >
+                            <AlertTriangle className="w-3 h-3" />
+                            {error}
+                        </motion.div>
+                    )}
+                </div>
+
+                <div className="w-full flex items-center gap-4 mb-8">
+                    <div className="h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent flex-grow"></div>
+                    <span className="text-neon-cyan/50 font-mono text-xs tracking-widest">MANUAL OVERRIDE</span>
+                    <div className="h-px bg-gradient-to-r from-transparent via-neon-cyan/30 to-transparent flex-grow"></div>
+                </div>
+
+                <form onSubmit={handleSearch} className="w-full space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {['Year', 'Make', 'Model'].map((field) => (
+                            <div key={field} className="relative group">
+                                <input
+                                    type="text"
+                                    placeholder={`ENTER ${field.toUpperCase()}`}
+                                    className="w-full bg-black/50 border border-neon-cyan/30 rounded-lg px-4 py-3 text-neon-cyan placeholder-neon-cyan/30 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all font-mono text-sm uppercase"
+                                    value={vehicle[field.toLowerCase() as keyof typeof vehicle]}
+                                    onChange={(e) => setVehicle({ ...vehicle, [field.toLowerCase()]: e.target.value })}
+                                />
+                                <div className="absolute inset-0 border border-neon-cyan/0 group-hover:border-neon-cyan/20 rounded-lg pointer-events-none transition-all" />
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="relative group">
+                        <div className="absolute left-4 top-3.5 text-neon-cyan/50">
+                            <Wrench className="w-5 h-5" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="DESCRIBE PROBLEM OR REPAIR (E.G. 'REPLACE BRAKES')"
+                            className="w-full bg-black/50 border border-neon-cyan/30 rounded-lg pl-12 pr-4 py-3 text-neon-cyan placeholder-neon-cyan/30 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all font-mono text-sm uppercase tracking-wide"
+                            value={task}
+                            onChange={(e) => setTask(e.target.value)}
+                        />
+                        <div className="absolute inset-0 border border-neon-cyan/0 group-hover:border-neon-cyan/20 rounded-lg pointer-events-none transition-all" />
+                    </div>
+
+                    <div className="pt-4">
+                        <button
+                            type="submit"
+                            disabled={!vehicle.year || !vehicle.make || !vehicle.model || !task}
+                            className="w-full bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan text-neon-cyan px-6 py-3 rounded-lg font-bold font-mono tracking-wider flex items-center justify-center gap-2 hover:shadow-glow-cyan transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Search className="w-5 h-5" />
+                            <span>INITIATE DIAGNOSTIC PROTOCOL</span>
+                        </button>
+                    </div>
                 </form>
 
                 <div className="mt-12 grid grid-cols-2 gap-8 w-full max-w-lg">

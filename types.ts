@@ -71,8 +71,14 @@ export interface VehicleInfo {
 
 // New Type for History
 export interface HistoryItem {
-    id: string;
-    title: string;
-    vehicle: string;
-    timestamp: number;
+  id: string;
+  title: string;
+  vehicle: string;
+  timestamp: number;
+}
+
+export interface AffiliateLink {
+  provider: string; // e.g., 'Amazon'
+  url: string;
+  price: string;
 }

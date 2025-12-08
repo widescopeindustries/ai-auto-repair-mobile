@@ -99,12 +99,17 @@ const generateTextGuide = async (vehicle: Vehicle, task: string): Promise<Omit<R
   const vehicleYear = parseInt(year, 10);
   let groundingInstruction = '';
   if (vehicleYear >= 1982 && vehicleYear <= 2013) {
-    groundingInstruction = 'CRITICAL: You MUST use the customized Google Search tool to find "site:charm.li ' + year + ' ' + make + ' ' + model + ' ' + task + '". Base ALL repair steps on the actual factory service manual content found on charm.li. If exact steps are found, cite them.';
+    groundingInstruction = 'CRITICAL: You MUST use the customized Google Search tool to find "site:charm.li ' + year + ' ' + make + ' ' + model + ' ' + task + '". Base ALL repair steps on the actual factory service manual content found on charm.li. If exact steps are found, cite them conceptually but do not output "Source: charm.li" in the user-facing text.';
   } else {
     groundingInstruction = 'Crucially, base all repair procedures on professional OEM service manuals found via search. The steps must be 100% factual and reflect industry-standard repair methods.';
   }
 
-  const prompt = `Generate a detailed, step-by-step DIY repair guide for the following task: "${task}" on a ${year} ${make} ${model}. ${groundingInstruction} The guide should be easy for a shade-tree mechanic to follow. Include essential safety warnings, a list of required tools, and a list of necessary parts. For each step, provide a clear instruction and a descriptive prompt for an AI image generator to create a technical illustration for that step. The image prompt should describe a clean, minimalist, black and white line drawing in an automotive service manual style.`;
+  const prompt = `Generate a detailed, step-by-step DIY repair guide for the following task: "${task}" on a ${year} ${make} ${model}. ${groundingInstruction} The guide should be easy for a shade-tree mechanic to follow, using clear "IF this, THEN that" logic where applicable for diagnostics or complex steps. 
+
+  Include essential safety warnings, a list of required tools, and a list of necessary parts. 
+  IMPORTANT: For the 'parts' list, provide specific, searchable product names (e.g., "Front Brake Pads (Ceramic)" instead of just "Brake Pads") so they can be easily found on Amazon.
+
+  For each step, provide a clear instruction and a descriptive prompt for an AI image generator to create a technical illustration for that step. The image prompt should describe a clean, minimalist, black and white line drawing in an automotive service manual style.`;
 
   const repairGuideSchema = {
     type: Type.OBJECT,
@@ -149,16 +154,19 @@ const generateTextGuide = async (vehicle: Vehicle, task: string): Promise<Omit<R
       config: {
         responseMimeType: "application/json",
         responseSchema: repairGuideSchema,
-        tools: [{ googleSearch: {} }],
       },
     });
 
     const text = response.text.trim();
+    console.log("Raw GenAI Response:", text); // Debug log
     const cleanJson = text.replace(/^```json\s*|```$/g, '');
     return JSON.parse(cleanJson);
 
   } catch (error) {
     console.error("Error generating text guide:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message, error.stack);
+    }
     throw new Error("Failed to generate the repair guide. The AI may be unable to process this request.");
   }
 };
