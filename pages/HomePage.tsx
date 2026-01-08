@@ -25,10 +25,10 @@ const HomePage: React.FC = () => {
     return (
         <>
             <SEOHead
-                title="Antigravity Diagnostics | AI Auto Repair"
-                description="Silence the check engine light. AI-powered repair guides with 98.4% diagnostic accuracy."
-                keywords="auto repair, car diagnostics, showroom, virtual garage, AI mechanic"
-                canonicalUrl="https://ai-auto-repair-mobile.vercel.app/"
+                title="SpotOn Auto | AI Auto Repair"
+                description="Silence the check engine light. SpotOn diagnostics with 98.4% accuracy."
+                keywords="auto repair, car diagnostics, spoton auto, virtual garage, AI mechanic"
+                canonicalUrl="https://spotonauto.com/"
             />
 
             <div className="flex min-h-screen w-full relative overflow-hidden bg-deep-space">
@@ -55,7 +55,7 @@ const HomePage: React.FC = () => {
                         <div className="hidden md:block bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-brand-cyan/30 shadow-glow-cyan">
                             <span className="text-brand-cyan font-bold font-mono tracking-wider text-sm flex items-center gap-2">
                                 <span className="w-2 h-2 bg-brand-cyan rounded-full animate-pulse"></span>
-                                ANTIGRAVITY CORE ONLINE
+                                SPOTON CORE ONLINE
                             </span>
                         </div>
                     </div>
