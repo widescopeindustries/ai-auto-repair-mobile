@@ -56,7 +56,7 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
             <main className="p-6 md:p-8">
                 {activeTab === Tab.Guide && (
                     <div className="space-y-8">
-                        {guide.steps.map((step) => (
+                        {guide.steps?.map((step) => (
                             <div key={step.step} className="grid md:grid-cols-2 gap-6 items-start border-b border-brand-cyan/30 pb-8 last:border-b-0">
                                 <div className="md:sticky md:top-24">
                                     <h3 className="flex items-center text-xl font-bold text-brand-cyan mb-3">
@@ -83,7 +83,7 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-widest"><WrenchIcon className="text-brand-cyan" />Tools Needed</h2>
                             <ul className="space-y-3">
-                                {guide.tools.map((tool, index) => {
+                                {guide.tools?.map((tool, index) => {
                                     const links = generateToolLinks(tool);
                                     return (
                                         <li key={index} className="flex items-center justify-between gap-3 text-gray-200 p-2 hover:bg-white/5 rounded transition-colors group">
@@ -110,7 +110,7 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-widest"><ShoppingCartIcon className="text-brand-cyan" />Parts List</h2>
                             <ul className="space-y-4">
-                                {guide.parts.map((part, index) => {
+                                {guide.parts?.map((part, index) => {
                                     const links = generatePartLinks(part, guide.vehicle);
                                     return (
                                         <li key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/5 rounded-lg border border-brand-cyan/20 hover:border-brand-cyan/50 hover:bg-brand-cyan/5 transition-all duration-300">
@@ -137,7 +137,7 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                             <div className="mt-8 p-4 bg-brand-cyan/10 border border-brand-cyan/30 rounded-xl text-center">
                                 <p className="text-sm text-gray-300 mb-4 font-medium italic">Support our free guides by using our links!</p>
                                 <a
-                                    href={`https://www.amazon.com/s?k=${encodeURIComponent(guide.vehicle + ' maintenance parts')}&tag=${process.env.AMAZON_AFFILIATE_TAG || 'aiautorepai04-20'}`}
+                                    href={`https://www.amazon.com/s?k=${encodeURIComponent(guide.vehicle + ' maintenance parts')}&tag=${import.meta.env.VITE_AMAZON_AFFILIATE_TAG || 'aiautorepai04-20'}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 text-brand-cyan border-2 border-brand-cyan px-6 py-3 rounded-full font-bold hover:bg-brand-cyan hover:text-black transition-all"
@@ -155,7 +155,7 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-widest"><AlertIcon className="text-red-500" />Safety Warnings</h2>
                         <ul className="space-y-3">
-                            {guide.safetyWarnings.map((warning, index) => (
+                            {guide.safetyWarnings?.map((warning, index) => (
                                 <li key={index} className="flex items-start gap-3 p-4 bg-red-900/30 border-l-4 border-red-500 rounded-r-lg">
                                     <AlertIcon className="text-red-500 flex-shrink-0 mt-1" />
                                     <span className="text-red-200">{warning}</span>
