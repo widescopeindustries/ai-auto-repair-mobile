@@ -85,30 +85,33 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
             {/* VIN Decoder Section */}
             <div className="mb-8 p-1 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-inner border border-gray-700">
                 <div className="bg-black/40 rounded-lg p-4 backdrop-blur-sm">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">Quick Scan (VIN)</label>
+                    <label htmlFor="vin-input" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">Quick Scan (VIN)</label>
                     <div className="flex gap-2">
                         <input
+                            id="vin-input"
                             type="text"
                             placeholder="ENTER VIN NUMBER"
-                            className="flex-grow bg-gray-900/80 border border-gray-700 rounded-lg px-4 py-2.5 text-brand-cyan placeholder-gray-600 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all font-mono text-sm uppercase tracking-wider"
+                            className="flex-grow bg-gray-900/80 border border-gray-700 rounded-lg px-4 py-2.5 text-brand-cyan placeholder-gray-500 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan transition-all font-mono text-sm uppercase tracking-wider"
                             value={vin}
                             onChange={(e) => {
                                 setVin(e.target.value.toUpperCase());
                                 setError(null);
                             }}
                             maxLength={17}
+                            aria-label="Vehicle Identification Number Input"
                         />
                         <button
                             type="button"
                             onClick={handleDecodeVin}
                             disabled={isDecoding || vin.length !== 17}
                             className="bg-gray-800 hover:bg-gray-700 text-brand-cyan border border-gray-600 hover:border-brand-cyan px-4 py-2 rounded-lg font-bold text-sm tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            aria-label="Decode VIN"
                         >
                             {isDecoding ? <ScanLine className="w-4 h-4 animate-spin" /> : 'DECODE'}
                         </button>
                     </div>
                     {error && (
-                        <div className="text-red-400 text-xs font-mono mt-2 flex items-center gap-1">
+                        <div className="text-red-400 text-xs font-mono mt-2 flex items-center gap-1" role="alert">
                             <AlertTriangle className="w-3 h-3" />
                             {error}
                         </div>
@@ -119,7 +122,7 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
             {/* divider */}
             <div className="relative flex items-center py-4 mb-6">
                 <div className="flex-grow border-t border-gray-800"></div>
-                <span className="flex-shrink-0 mx-4 text-gray-600 text-[10px] font-bold uppercase tracking-widest font-mono">or Manual Entry</span>
+                <span className="flex-shrink-0 mx-4 text-gray-500 text-[10px] font-bold uppercase tracking-widest font-mono">or Manual Entry</span>
                 <div className="flex-grow border-t border-gray-800"></div>
             </div>
 
@@ -127,10 +130,13 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* YEAR */}
                     <div className="relative group">
+                        <label htmlFor="year-select" className="sr-only">Select Year</label>
                         <select
+                            id="year-select"
                             className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan shadow-lg transition-all text-sm font-medium appearance-none hover:border-gray-500"
                             value={vehicle.year}
                             onChange={(e) => setVehicle({ ...vehicle, year: e.target.value, model: '' })}
+                            aria-label="Select Year"
                         >
                             <option value="">Select Year</option>
                             {availableYears.map(year => (
@@ -142,11 +148,14 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
 
                     {/* MAKE */}
                     <div className="relative group">
+                        <label htmlFor="make-select" className="sr-only">Select Make</label>
                         <select
+                            id="make-select"
                             className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan shadow-lg transition-all text-sm font-medium appearance-none hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             value={vehicle.make}
                             onChange={(e) => setVehicle({ ...vehicle, make: e.target.value, model: '' })}
                             disabled={!vehicle.year}
+                            aria-label="Select Make"
                         >
                             <option value="">Select Make</option>
                             {COMMON_MAKES.map(make => (
@@ -158,11 +167,14 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
 
                     {/* MODEL */}
                     <div className="relative group">
+                        <label htmlFor="model-select" className="sr-only">Select Model</label>
                         <select
+                            id="model-select"
                             className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan shadow-lg transition-all text-sm font-medium appearance-none hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             value={vehicle.model}
                             onChange={(e) => setVehicle({ ...vehicle, model: e.target.value })}
                             disabled={!vehicle.make || loadingModels}
+                            aria-label="Select Model"
                         >
                             <option value="">{loadingModels ? "Scanning..." : "Select Model"}</option>
                             {availableModels.map(model => (
@@ -176,15 +188,18 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
                 </div>
 
                 <div className="relative group">
+                    <label htmlFor="symptom-input" className="sr-only">Describe Symptom</label>
                     <div className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-brand-cyan transition-colors">
                         <Wrench className="w-5 h-5" />
                     </div>
                     <input
+                        id="symptom-input"
                         type="text"
                         placeholder="Describe symptom (e.g. 'Squeaky Brakes')"
-                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan shadow-lg transition-all text-sm"
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan shadow-lg transition-all text-sm"
                         value={task}
                         onChange={(e) => setTask(e.target.value)}
+                        aria-label="Describe symptom or repair task"
                     />
                 </div>
 
