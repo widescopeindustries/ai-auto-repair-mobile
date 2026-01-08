@@ -63,7 +63,7 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-cyan text-black font-bold mr-3">{step.step}</span>
                                         Instruction
                                     </h3>
-                                    <p className="text-gray-200 leading-relaxed">{step.instruction}</p>
+                                    <p className="text-gray-100 text-lg leading-loose tracking-wide">{step.instruction}</p>
                                 </div>
                                 <div className="flex flex-col items-center justify-center bg-black rounded-lg p-4 min-h-[250px] border border-brand-cyan/30">
                                     {step.imageUrl ? (
