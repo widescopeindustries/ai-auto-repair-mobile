@@ -1,11 +1,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { supabase } from '../../lib/supabaseClient'; // We need the backend-compatible client (admin) ideally, or pass user ID
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2024-12-18.acacia', // Use latest or pinned version
+    apiVersion: '2025-01-27.acacia' as any, // Cast to any to avoid strict version mismatch if types are outdated
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Cpu, Activity, ImageIcon, Camera } from 'lucide-react';
-import { createDiagnosticChat, sendDiagnosticMessage } from '../services/geminiService';
+import { createDiagnosticChat, sendDiagnosticMessage, Chat } from '../services/geminiService';
 import { Vehicle } from '../types';
-import { Chat } from "@google/genai";
 
 interface DiagnosticChatProps {
     vehicle?: Vehicle;
