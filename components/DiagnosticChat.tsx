@@ -158,7 +158,7 @@ const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle, initialProblem
                         >
                             <div className={`max-w-[85%] rounded-lg p-4 font-mono text-sm leading-relaxed border ${msg.type === 'user'
                                 ? 'bg-neon-cyan/10 border-neon-cyan/30 text-neon-cyan'
-                                : 'bg-gray-900/90 border-gray-700 text-gray-200 shadow-lg'
+                                : 'bg-gray-900/90 border-gray-700 text-white shadow-lg'
                                 }`}>
                                 <p>{msg.text}</p>
                                 {msg.imageUrl && (
@@ -193,7 +193,7 @@ const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle, initialProblem
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
                         placeholder={typing ? "Awaiting System Response..." : "Enter symptoms, codes, or observations..."}
-                        className="flex-1 bg-black/50 border border-neon-cyan/30 rounded-lg px-4 py-3 text-neon-cyan placeholder-neon-cyan/30 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan font-mono text-sm transition-all"
+                        className="flex-1 bg-black/50 border border-neon-cyan/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan font-mono text-sm transition-all"
                         disabled={typing}
                         autoFocus
                     />
