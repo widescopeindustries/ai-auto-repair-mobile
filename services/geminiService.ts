@@ -2,10 +2,10 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { Vehicle, VehicleInfo, RepairGuide, ChatMessage } from '../types';
 
-const apiKey = import.meta.env.GEMINI_API_KEY;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!apiKey || apiKey === 'placeholder_gemini_key') {
-  console.error("Gemini API Key is missing or invalid.");
+  console.error("Gemini API Key is missing or invalid. Make sure VITE_GEMINI_API_KEY is set in your .env file.");
 }
 
 const genAI = new GoogleGenAI({ apiKey: apiKey || '' });
