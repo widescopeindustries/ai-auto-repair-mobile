@@ -13,7 +13,7 @@ if (!apiKey || apiKey === 'placeholder_gemini_key') {
 const genAI = new GoogleGenAI({ apiKey: apiKey || '' });
 
 // Models
-const TEXT_MODEL = "gemini-2.0-flash-exp";
+const TEXT_MODEL = "gemini-2.0-flash";
 const IMAGE_MODEL = "imagen-3.0-generate-002";
 
 // Helper for Image Generation
