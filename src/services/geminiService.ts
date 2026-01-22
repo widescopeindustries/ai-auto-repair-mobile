@@ -16,15 +16,6 @@ const genAI = new GoogleGenAI({ apiKey: apiKey || '' });
 const TEXT_MODEL = "gemini-2.0-flash";
 const IMAGE_MODEL = "imagen-3.0-generate-002";
 
-// Google Search tool for grounding in professional service manuals
-const googleSearchTool = {
-  googleSearch: {
-    dynamicRetrievalConfig: {
-      mode: 'DYNAMIC'
-    }
-  }
-};
-
 // Schemas
 const vehicleSchema = {
   type: Type.OBJECT,
@@ -124,7 +115,6 @@ You MUST format your entire response as a single JSON object with three keys: "j
     config: {
       responseMimeType: "application/json",
       responseSchema: vehicleSchema,
-      tools: [googleSearchTool],
     },
   });
 
@@ -134,7 +124,7 @@ You MUST format your entire response as a single JSON object with three keys: "j
   const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => chunk.web)
     .filter((web: any): web is { uri: string; title: string } => !!(web?.uri && web.title)) || [];
-  
+
   return { ...data, sources };
 };
 
@@ -186,7 +176,6 @@ Keep instructions concise, practical, and grounded in actual service manual proc
     config: {
       responseMimeType: "application/json",
       responseSchema: repairGuideSchema,
-      tools: [googleSearchTool],
     },
   });
 
@@ -196,11 +185,11 @@ Keep instructions concise, practical, and grounded in actual service manual proc
   const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => chunk.web)
     .filter((web: any): web is { uri: string; title: string } => !!(web?.uri && web.title)) || [];
-  
-  const stepsWithImages = data.steps.map((step: any, idx: number) => ({ 
-    step: idx + 1, 
-    instruction: step.instruction, 
-    imageUrl: "" 
+
+  const stepsWithImages = data.steps.map((step: any, idx: number) => ({
+    step: idx + 1,
+    instruction: step.instruction,
+    imageUrl: ""
   }));
 
   const guideId = `${year}-${make}-${model}-${data.title}`.toLowerCase().replace(/\s+/g, '-');
@@ -231,7 +220,6 @@ Instructions:
     model: TEXT_MODEL,
     config: {
       systemInstruction: diagnosticSystemInstruction,
-      tools: [googleSearchTool],
     },
     history: []
   });
