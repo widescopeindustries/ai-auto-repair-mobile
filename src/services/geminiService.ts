@@ -1,4 +1,4 @@
-
+ 
 import { GoogleGenAI, Type } from '@google/genai';
 import { Vehicle, VehicleInfo, RepairGuide, ChatMessage } from '../types';
 
@@ -15,6 +15,15 @@ const genAI = new GoogleGenAI({ apiKey: apiKey || '' });
 // Models
 const TEXT_MODEL = "gemini-2.0-flash";
 const IMAGE_MODEL = "imagen-3.0-generate-002";
+
+// Google Search tool for grounding in professional service manuals
+const googleSearchTool = {
+  googleSearch: {
+    dynamicRetrievalConfig: {
+      mode: 'DYNAMIC'
+    }
+  }
+};
 
 // Schemas
 const vehicleSchema = {
@@ -97,16 +106,15 @@ export const decodeVin = async (vin: string): Promise<Vehicle> => {
 
 export const getVehicleInfo = async (vehicle: Vehicle, task: string): Promise<VehicleInfo> => {
   const { year, make, model } = vehicle;
-  const vehicleYear = parseInt(year, 10);
-  let charmLiInstruction = '';
-  if (vehicleYear >= 1982 && vehicleYear <= 2013) {
-    charmLiInstruction = 'URGENT: For this vehicle, you MUST search "site:charm.li ' + year + ' ' + make + ' ' + model + ' ' + task + '" to find the specific professional service manual page.';
-  }
 
-  const prompt = `Act as an expert automotive service database, using web search to find the most current and factual information. ${charmLiInstruction} For a ${year} ${make} ${model} and the repair task "${task}", provide the following information:
-1. A "Job Snapshot" based on standard service manual data, with realistic estimates for difficulty, time, parts cost, and potential savings.
-2. A list of real Technical Service Bulletins (TSBs) related to this task.
-3. A list of real safety recalls that might be relevant.
+  const prompt = `Act as an expert automotive service database. For a ${year} ${make} ${model} and repair task "${task}", use Google Search to find the most current and factual information.
+
+PRIMARY DATA SOURCE: You MUST first search "site:charm.li ${year} ${make} ${model} ${task}" to find the specific professional service manual page on charm.li. Use this as your primary source of truth.
+
+Provide the following information based on charm.li service manual data:
+1. A "Job Snapshot" with realistic estimates for difficulty (1-5), time, parts cost, and potential savings.
+2. A list of real Technical Service Bulletins (TSBs) found through search.
+3. A list of real safety recalls relevant to this task.
 
 You MUST format your entire response as a single JSON object with three keys: "jobSnapshot", "tsbs", and "recalls".`;
 
@@ -116,6 +124,7 @@ You MUST format your entire response as a single JSON object with three keys: "j
     config: {
       responseMimeType: "application/json",
       responseSchema: vehicleSchema,
+      tools: [googleSearchTool],
     },
   });
 
@@ -125,29 +134,28 @@ You MUST format your entire response as a single JSON object with three keys: "j
   const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => chunk.web)
     .filter((web: any): web is { uri: string; title: string } => !!(web?.uri && web.title)) || [];
-
+  
   return { ...data, sources };
 };
 
 export const generateFullRepairGuide = async (vehicle: Vehicle, task: string): Promise<RepairGuide> => {
   const { year, make, model } = vehicle;
-  const vehicleYear = parseInt(year, 10);
-  let groundingInstruction = '';
-  if (vehicleYear >= 1982 && vehicleYear <= 2013) {
-    groundingInstruction = 'Use site:charm.li for ' + year + ' ' + make + ' ' + model + ' ' + task + ' if available.';
-  }
 
-  const prompt = `Generate a DIY repair guide for "${task}" on a ${year} ${make} ${model}. ${groundingInstruction}
+  const prompt = `Generate a step-by-step DIY repair guide for "${task}" on a ${year} ${make} ${model}.
+
+DATA SOURCE REQUIREMENT: You MUST use Google Search to find authoritative information. Search specifically for "site:charm.li ${year} ${make} ${model} ${task}" first. If charm.li has the specific procedure, use it as your PRIMARY SOURCE. Supplement with other professional automotive sources if needed.
+
+Based on the search results, provide:
 
 Return JSON with:
-- title (concise)
+- title (concise, based on actual procedure found)
 - vehicle ("${year} ${make} ${model}")
-- safetyWarnings (3-5 brief warnings)
-- tools (5-10 common tools)
-- parts (5-10 searchable part names)
-- steps (5-8 numbered steps, each with instruction)
+- safetyWarnings (3-5 brief, critical warnings)
+- tools (5-10 common tools needed)
+- parts (5-10 searchable part names from service manual)
+- steps (5-8 numbered steps with clear instructions)
 
-Keep instructions concise and practical.`;
+Keep instructions concise, practical, and grounded in actual service manual procedures found through search.`;
 
   const repairGuideSchema = {
     type: Type.OBJECT,
@@ -178,6 +186,7 @@ Keep instructions concise and practical.`;
     config: {
       responseMimeType: "application/json",
       responseSchema: repairGuideSchema,
+      tools: [googleSearchTool],
     },
   });
 
@@ -207,16 +216,22 @@ Keep instructions concise and practical.`;
 // --- Diagnostic Chat ---
 
 export const createDiagnosticChat = (vehicle: Vehicle): Chat => {
-  const diagnosticSystemInstruction = `You are an expert automotive diagnostic AI. Your goal is to guide a DIY mechanic through diagnosing a vehicle issue step-by-step.
-    1.  Begin by asking for the primary symptom or issue.
-    2.  Provide one single, clear diagnostic step at a time. Be concise.
-    3.  After each step, wait for the user's response.
-    4.  You MUST format your entire response as a single JSON object with one key: "instruction" (your text guidance). Do not include any other text.`;
+  const { year, make, model } = vehicle;
+  const diagnosticSystemInstruction = `You are an expert automotive diagnostic AI for a ${year} ${make} ${model}. Your goal is to guide a DIY mechanic through diagnosing a vehicle issue step-by-step.
+
+DATA SOURCE: When user describes symptoms or issues, you MUST use Google Search to find relevant diagnostic information. Always search "site:charm.li ${year} ${make} ${model}" combined with the symptom to find professional diagnostic procedures. Use charm.li as your PRIMARY SOURCE of information.
+
+Instructions:
+1.  Begin by asking for the primary symptom or issue.
+2.  Provide one single, clear diagnostic step at a time. Be concise.
+3.  After each step, wait for the user's response.
+4.  You MUST format your entire response as a single JSON object with one key: "instruction" (your text guidance). Do not include any other text.`;
 
   const session = genAI.chats.create({
     model: TEXT_MODEL,
     config: {
       systemInstruction: diagnosticSystemInstruction,
+      tools: [googleSearchTool],
     },
     history: []
   });
@@ -229,7 +244,6 @@ export const createDiagnosticChat = (vehicle: Vehicle): Chat => {
 };
 
 export const sendDiagnosticMessage = async (chat: Chat, message: string): Promise<{ text: string, imageUrl: string | null }> => {
-  // We send the message to the existing session
   const result = await chat.session.sendMessage(message);
   
   const text = (result.text || "").trim().replace(/^```json\s*|```$/g, '');

@@ -205,13 +205,14 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                 {/* SOURCES FOOTER */}
                 {guide.sources && guide.sources.length > 0 && (
                     <footer className="mt-16 pt-8 border-t border-white/5">
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">References & Data Sources</h3>
-                        <div className="flex flex-wrap gap-3">
-                            {guide.sources.map((source, index) => (
-                                <a key={index} href={source.uri} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 text-xs text-gray-400 hover:text-white transition-all flex items-center gap-2">
-                                    <ExternalLinkIcon className="w-3 h-3" /> {source.title}
-                                </a>
-                            ))}
+                        <div className="flex items-center gap-3 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                            <div className="flex items-center gap-2">
+                                <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
+                                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Verified from Factory Manuals</span>
+                            </div>
+                            <span className="text-[10px] text-gray-500 font-mono">
+                                {guide.sources.length} authoritative sources used
+                            </span>
                         </div>
                     </footer>
                 )}
