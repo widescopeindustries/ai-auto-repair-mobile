@@ -1,9 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import DiagnosticChat from '@/components/DiagnosticChat';
 import SEOHead from '@/components/seo/SEOHead';
+
+function DiagnosticContent() {
+    return <DiagnosticChat />;
+}
 
 export default function DiagnosticPage() {
     const router = useRouter();
@@ -18,7 +22,9 @@ export default function DiagnosticPage() {
                 <h1 className="text-2xl font-mono text-neon-cyan mb-8 tracking-widest uppercase">
                     SYSTEM DIAGNOSTICS
                 </h1>
-                <DiagnosticChat />
+                <Suspense fallback={<div className="text-neon-cyan font-mono">Initializing Diagnostic Core...</div>}>
+                    <DiagnosticContent />
+                </Suspense>
 
                 <div className="mt-8 flex flex-col items-center gap-4">
                     <button
@@ -27,7 +33,7 @@ export default function DiagnosticPage() {
                     >
                         End Diagnosis
                     </button>
-                    
+
                     <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                          <span className="text-[10px] text-gray-400 font-mono tracking-wider uppercase">Secure & Private Session</span>

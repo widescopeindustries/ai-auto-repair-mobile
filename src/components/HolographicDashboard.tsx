@@ -208,7 +208,13 @@ const HolographicDashboard: React.FC<HolographicDashboardProps> = ({ onVehicleCh
                         type="button"
                         onClick={() => {
                             if (vehicle.year && vehicle.make && vehicle.model && task) {
-                                router.push('/diagnose'); // State needs to be handled via query params or context in Next.js
+                                const params = new URLSearchParams({
+                                    year: vehicle.year,
+                                    make: vehicle.make,
+                                    model: vehicle.model,
+                                    task: task
+                                });
+                                router.push(`/diagnose?${params.toString()}`);
                             }
                         }}
                         disabled={!vehicle.year || !vehicle.make || !vehicle.model || !task}

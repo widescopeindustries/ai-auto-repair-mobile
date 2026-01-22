@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Cpu, Activity, ImageIcon, Camera } from 'lucide-react';
 import { createDiagnosticChat, sendDiagnosticMessage, Chat } from '../services/apiClient';
@@ -17,12 +18,19 @@ interface Message {
     options?: string[];
 }
 
-const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle, initialProblem }) => {
+const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle: vehicleProp, initialProblem: initialProblemProp }) => {
+    const searchParams = useSearchParams();
     const [messages, setMessages] = useState<Message[]>([]);
     const [typing, setTyping] = useState(false);
     const [chatSession, setChatSession] = useState<Chat | null>(null);
     const [userInput, setUserInput] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const vehicle = vehicleProp || (searchParams.get('year') && searchParams.get('make') && searchParams.get('model')
+        ? { year: searchParams.get('year')!, make: searchParams.get('make')!, model: searchParams.get('model')! }
+        : null);
+
+    const initialProblem = initialProblemProp || searchParams.get('task') || '';
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,11 +42,11 @@ const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle, initialProblem
 
     useEffect(() => {
         const initChat = async () => {
-            // Fallback if no vehicle provided, though page should enforce it
-            const currentVehicle = vehicle || { year: 'Unknown', make: 'Vehicle', model: '' };
+            // Wait for vehicle from search params or props
+            if (!vehicle) return;
 
             try {
-                const chat = createDiagnosticChat(currentVehicle);
+                const chat = createDiagnosticChat(vehicle);
                 setChatSession(chat);
 
                 // Initial greeting
@@ -48,7 +56,7 @@ const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle, initialProblem
                 setTimeout(() => {
                     const greeting = initialProblem
                         ? `Diagnostic Core Online. Analyzing provided symptom: "${initialProblem}"...`
-                        : `Diagnostic Core Online. Connected to ${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model} database. Accessing factory-level technical service bulletins and professional diagnostic manuals. Please describe the primary symptom.`;
+                        : `Diagnostic Core Online. Connected to ${vehicle.year} ${vehicle.make} ${vehicle.model} database. Accessing factory-level technical service bulletins and professional diagnostic manuals. Please describe the primary symptom.`;
 
                     setMessages([{
                         id: 'init',
@@ -75,7 +83,7 @@ const DiagnosticChat: React.FC<DiagnosticChatProps> = ({ vehicle, initialProblem
             }
         };
 
-        if (!chatSession) {
+        if (!chatSession && vehicle) {
             initChat();
         }
     }, [vehicle]);
