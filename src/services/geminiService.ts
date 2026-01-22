@@ -134,17 +134,20 @@ export const generateFullRepairGuide = async (vehicle: Vehicle, task: string): P
   const vehicleYear = parseInt(year, 10);
   let groundingInstruction = '';
   if (vehicleYear >= 1982 && vehicleYear <= 2013) {
-    groundingInstruction = 'CRITICAL: You MUST use the Google Search tool to find "site:charm.li ' + year + ' ' + make + ' ' + model + ' ' + task + '". Base ALL repair steps on the factory manual content retrieved.';
-  } else {
-    groundingInstruction = 'Crucially, use Google Search to find professional OEM service manuals or technical forums for this specific vehicle.';
+    groundingInstruction = 'Use site:charm.li for ' + year + ' ' + make + ' ' + model + ' ' + task + ' if available.';
   }
 
-  const prompt = `Generate a detailed, step-by-step DIY repair guide for the following task: "${task}" on a ${year} ${make} ${model}. ${groundingInstruction} The guide should be easy for a shade-tree mechanic to follow. 
-  
-  Include essential safety warnings, a list of required tools, and a list of necessary parts. 
-  IMPORTANT: For the 'parts' list, provide specific, searchable product names.
+  const prompt = `Generate a DIY repair guide for "${task}" on a ${year} ${make} ${model}. ${groundingInstruction}
 
-  For each step, provide a clear instruction and a descriptive prompt for an AI image generator to create a technical illustration for that step.`;
+Return JSON with:
+- title (concise)
+- vehicle ("${year} ${make} ${model}")
+- safetyWarnings (3-5 brief warnings)
+- tools (5-10 common tools)
+- parts (5-10 searchable part names)
+- steps (5-8 numbered steps, each with instruction)
+
+Keep instructions concise and practical.`;
 
   const repairGuideSchema = {
     type: Type.OBJECT,
@@ -160,10 +163,9 @@ export const generateFullRepairGuide = async (vehicle: Vehicle, task: string): P
           type: Type.OBJECT,
           properties: {
             step: { type: Type.INTEGER },
-            instruction: { type: Type.STRING },
-            imagePrompt: { type: Type.STRING }
+            instruction: { type: Type.STRING }
           },
-          required: ["step", "instruction", "imagePrompt"]
+          required: ["step", "instruction"]
         }
       }
     },
@@ -185,9 +187,12 @@ export const generateFullRepairGuide = async (vehicle: Vehicle, task: string): P
   const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => chunk.web)
     .filter((web: any): web is { uri: string; title: string } => !!(web?.uri && web.title)) || [];
-
-  // Disable image generation for now to stay under 10s timeout
-  const stepsWithImages = data.steps.map((step: any) => ({ ...step, imageUrl: "" }));
+  
+  const stepsWithImages = data.steps.map((step: any, idx: number) => ({ 
+    step: idx + 1, 
+    instruction: step.instruction, 
+    imageUrl: "" 
+  }));
 
   const guideId = `${year}-${make}-${model}-${data.title}`.toLowerCase().replace(/\s+/g, '-');
 

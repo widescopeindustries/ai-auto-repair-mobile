@@ -10,13 +10,13 @@ const API_ENDPOINT = '/api/generate-guide';
 /**
  * Makes a request to the server-side API
  */
-async function makeApiRequest(action: string, payload: any) {
+async function makeApiRequest(action: string, payload: any, options?: { stream?: boolean }) {
   const response = await fetch(API_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ action, payload }),
+    body: JSON.stringify({ action, payload, stream: options?.stream }),
   });
 
   if (!response.ok) {
@@ -46,6 +46,69 @@ export const getVehicleInfo = async (vehicle: Vehicle, task: string): Promise<Ve
  */
 export const generateFullRepairGuide = async (vehicle: Vehicle, task: string): Promise<RepairGuide> => {
   return makeApiRequest('generate-guide', { vehicle, task });
+};
+
+/**
+ * Stream guide generation for real-time updates
+ */
+export const streamRepairGuide = async (
+  vehicle: Vehicle,
+  task: string,
+  onUpdate: (chunk: any) => void
+): Promise<RepairGuide> => {
+  const response = await fetch(API_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'generate-guide', payload: { vehicle, task }, stream: true }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Stream request failed: ${response.statusText}`);
+  }
+
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+  let fullGuide: RepairGuide | null = null;
+
+  if (!reader) {
+    throw new Error('Response body is not readable');
+  }
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n');
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const data = JSON.parse(line.slice(6));
+          onUpdate(data);
+
+          if (data.status === 'complete') {
+            fullGuide = data.data;
+          } else if (data.status === 'error') {
+            throw new Error(data.error);
+          }
+        } catch (e) {
+          console.warn('Failed to parse SSE data:', e);
+        }
+      }
+    }
+  }
+
+  return fullGuide!;
+};
+
+/**
+ * Get quick preview of repair task
+ */
+export const getQuickPreview = async (vehicle: Vehicle, task: string) => {
+  return makeApiRequest('quick-preview', { vehicle, task });
 };
 
 /**
@@ -79,7 +142,6 @@ export const sendDiagnosticMessage = async (
     vehicle: chat.vehicle,
   });
 
-  // Update chat history with user message and AI response
   chat.history.push(
     { role: 'user', parts: [{ text: message }] },
     { role: 'model', parts: [{ text: response.text }] }

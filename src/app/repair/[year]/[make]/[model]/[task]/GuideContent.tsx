@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RepairGuideDisplay from '@/components/RepairGuideDisplay';
 import LoadingIndicator from '@/components/LoadingIndicator';
-import { generateFullRepairGuide } from '@/services/apiClient';
+import { generateFullRepairGuide, streamRepairGuide } from '@/services/apiClient';
 import { saveGuide, getGuideById } from '@/services/storageService';
 import { RepairGuide } from '@/types';
 import UpgradeModal from '@/components/UpgradeModal';
@@ -17,6 +17,8 @@ interface GuideContentProps {
         task: string;
     };
 }
+
+const guideCache = new Map<string, RepairGuide>();
 
 export default function GuideContent({ params }: GuideContentProps) {
     const router = useRouter();
@@ -44,7 +46,15 @@ export default function GuideContent({ params }: GuideContentProps) {
                     return;
                 }
 
+                if (guideCache.has(guideId)) {
+                    setGuide(guideCache.get(guideId)!);
+                    setLoading(false);
+                    return;
+                }
+
                 const generatedGuide = await generateFullRepairGuide(vehicle, cleanTask);
+                guideCache.set(guideId, generatedGuide);
+                await saveGuide(generatedGuide);
                 setGuide(generatedGuide);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to generate guide.");
@@ -57,8 +67,11 @@ export default function GuideContent({ params }: GuideContentProps) {
     }, [year, make, model, task]);
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <LoadingIndicator />
+            <p className="text-brand-cyan font-mono text-sm mt-4 animate-pulse">
+                Generating repair guide with AI...
+            </p>
         </div>
     );
 
