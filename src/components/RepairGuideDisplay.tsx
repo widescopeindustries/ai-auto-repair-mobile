@@ -189,9 +189,9 @@ const RepairGuideDisplay: React.FC<RepairGuideDisplayProps> = ({ guide, onReset 
                                             {step.imageUrl ? (
                                                 <img src={step.imageUrl} alt={`Visual for step ${step.step}`} className="w-full h-full object-contain" />
                                             ) : (
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-600">
-                                                    <div className="w-16 h-16 rounded-full border-2 border-gray-700 border-t-blue-500 animate-spin mb-4 opacity-50"></div>
-                                                    <span className="text-xs font-mono uppercase tracking-widest opacity-50">Generating Visual...</span>
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                                                    <WrenchIcon className="w-12 h-12 text-blue-500/30 mb-2" />
+                                                    <span className="text-xs font-mono uppercase tracking-widest text-gray-500">Step {step.step}</span>
                                                 </div>
                                             )}
                                         </div>

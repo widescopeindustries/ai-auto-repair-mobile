@@ -182,9 +182,15 @@ Keep instructions concise, practical, and grounded in actual service manual proc
   const text = (response.text || "").trim().replace(/^```json\s*|```$/g, '');
   const data = JSON.parse(text);
 
-  const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
+  // Get source count but don't expose URLs (especially charm.li)
+  const rawSources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => chunk.web)
     .filter((web: any): web is { uri: string; title: string } => !!(web?.uri && web.title)) || [];
+  
+  // Only pass sanitized source info (no URLs, just count for "verified" badge)
+  const sources = rawSources.length > 0 
+    ? [{ title: 'Factory Service Manual', uri: '#verified' }] 
+    : [];
 
   const stepsWithImages = data.steps.map((step: any, idx: number) => ({
     step: idx + 1,
@@ -198,7 +204,8 @@ Keep instructions concise, practical, and grounded in actual service manual proc
     ...data,
     id: guideId,
     steps: stepsWithImages,
-    sources
+    sources,
+    sourceCount: rawSources.length
   };
 };
 
