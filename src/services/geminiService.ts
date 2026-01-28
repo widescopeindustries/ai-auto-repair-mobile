@@ -75,7 +75,24 @@ export interface Chat {
 }
 
 export const decodeVin = async (vin: string): Promise<Vehicle> => {
-  const prompt = `Decode the following Vehicle Identification Number (VIN) and return the year, make, and model. VIN: "${vin}"`;
+  // Extract year from 10th character using standard VIN decoding
+  const yearChar = vin.length >= 10 ? vin.charAt(9).toUpperCase() : '';
+  const yearMap: Record<string, string> = {
+    'A': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'E': '2014',
+    'F': '2015', 'G': '2016', 'H': '2017', 'J': '2018', 'K': '2019',
+    'L': '2020', 'M': '2021', 'N': '2022', 'P': '2023', 'R': '2024',
+    'S': '2025', 'T': '2026', 'V': '2027', 'W': '2028', 'X': '2029',
+    'Y': '2030', '1': '2001', '2': '2002', '3': '2003', '4': '2004',
+    '5': '2005', '6': '2006', '7': '2007', '8': '2008', '9': '2009',
+  };
+  const knownYear = yearMap[yearChar] || '';
+
+  const prompt = `Decode this VIN and return the year, make, and model.
+VIN: "${vin}"
+
+IMPORTANT: The 10th character of a VIN indicates the model year. This VIN's 10th character is "${yearChar}"${knownYear ? ` which corresponds to year ${knownYear}` : ''}.
+
+Return accurate year, make, and model based on standard VIN decoding.`;
 
   const response = await genAI.models.generateContent({
     model: TEXT_MODEL,
@@ -88,6 +105,11 @@ export const decodeVin = async (vin: string): Promise<Vehicle> => {
 
   const text = (response.text || "").trim().replace(/^```json\s*|```$/g, '');
   const data = JSON.parse(text);
+
+  // Use our decoded year if Gemini got it wrong
+  if (knownYear && data.year !== knownYear) {
+    data.year = knownYear;
+  }
 
   if (data.year) {
     data.year = data.year.toString().replace(/[^0-9]/g, '').slice(0, 4);
